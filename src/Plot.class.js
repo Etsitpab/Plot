@@ -24,7 +24,6 @@ import Matrix, {
     MatrixView,
     Check
 } from "../../JSNA/src/Matrix.class.js";
-import CIE from "../../JSNA/modules/jsCIE/src/CIE.object.js";
 
 import Tools from "./Plot.tools.js";
 import Tree2d from "./Tree2d.class.js";
@@ -94,72 +93,60 @@ import Tree2d from "./Tree2d.class.js";
  *  The new plot.
  *
  */
-function Plot(id, size, parent, args) {
-    id = id || 'plot 1';
+function Plot(id = 'plot 1', size, parent, args = {}) {
     var width, height;
     if (typeof size === Number) {
         width = size;
         height = size;
     } else if (size instanceof Array && size.length === 2) {
-        width = size[0];
-        height = size[1];
+        [width, height] = size;
     }
     if (parent) {
         if (!(parent instanceof HTMLElement)) {
             parent = document.getElementById(parent);
             parent = parent || document.body;
         }
-        var THIS = this;
         if (!size) {
-            var resize = function() {
-                THIS.setWidth(parent.clientWidth);
-                THIS.setHeight(parent.clientHeight);
-                THIS.autoDisplay();
+            let resize = () => {
+                this.setWidth(parent.clientWidth);
+                this.setHeight(parent.clientHeight);
+                this.autoDisplay();
             };
             window.addEventListener("resize", resize);
             width = parent.clientWidth;
             height = parent.clientHeight;
         }
     }
-    args = args || {};
 
-    var param = {
+    let param = {
         'width': width,
         'height': height,
         'id': id
     };
-    var drawing = Tools.createSVGNode('svg', param);
+    let drawing = Tools.createSVGNode('svg', param);
     // Allow to retrieve plot from SVG element;
-    drawing.getPlot = function() {
-        return this;
-    }.bind(this);
+    drawing.getPlot = () => this;
 
     /** Returns parent node if defined.
      * @return {Object}
      */
-    this.getParentNode = function() {
-        return parent;
-    };
+    this.getParentNode = () => parent;
 
     /** Returns the plot id.
      * @return {String}
      */
-    this.getId = function() {
-        return id;
-    };
+    this.getId = () => id;
 
     /** Returns the width of the plot.
      * @return {Number}
      */
-    this.getWidth = function() {
-        return parseFloat(drawing.getAttribute('width'));
-    };
+    this.getWidth = () => parseFloat(drawing.getAttribute('width'));
 
     /** Set the width of the plot.
      * @param {Number} w
      * @chainable
      */
-    this.setWidth = function(w) {
+    this.setWidth = w => {
         drawing.setAttributeNS(null, 'width', w);
         this.autoDisplay();
         return this;
@@ -168,15 +155,13 @@ function Plot(id, size, parent, args) {
     /** Returns the width of the plot.
      * @return {Number}
      */
-    this.getHeight = function() {
-        return parseFloat(drawing.getAttribute('height'));
-    };
+    this.getHeight = () => parseFloat(drawing.getAttribute('height'));
 
     /** Set the width of the plot.
      * @param {Number} w
      * @chainable
      */
-    this.setHeight = function(h) {
+    this.setHeight = h => {
         drawing.setAttributeNS(null, 'height', h);
         this.autoDisplay();
         return this;
@@ -185,11 +170,9 @@ function Plot(id, size, parent, args) {
     /** Returns the svg element associeted to the plot.
      * @return {Object}
      */
-    this.getDrawing = function() {
-        return drawing;
-    };
+    this.getDrawing = () => drawing;
 
-    var currentAxis = {
+    let currentAxis = {
         'x': 0,
         'y': 0,
         'width': 1,
@@ -205,15 +188,7 @@ function Plot(id, size, parent, args) {
      * + width,
      * + height.
      */
-    this.getCurrentAxis = function() {
-        var i, propOut = {};
-        for (i in currentAxis) {
-            if (currentAxis.hasOwnProperty(i)) {
-                propOut[i] = currentAxis[i];
-            }
-        }
-        return propOut;
-    };
+    this.getCurrentAxis = () => Object.assign({}, currentAxis);
 
     /** Set the current axis of the plot.
      * @param {Object} BBox
@@ -226,24 +201,20 @@ function Plot(id, size, parent, args) {
      *
      * @chainable
      */
-    this.setCurrentAxis = function(BBox) {
-        currentAxis.x = BBox.x;
-        currentAxis.y = BBox.y;
-        currentAxis.width = BBox.width;
-        currentAxis.height = BBox.height;
+    this.setCurrentAxis = BBox => {
+        Object.assign(currentAxis, BBox);
         return this;
     };
 
     // Plot specific properties
-    var ownProperties = this.getProperties('ownProperties');
+    let ownProperties = this.getProperties('ownProperties');
 
     /** Get a property of the plot.
      * @param {String} name
      * @return {String}
      */
-    this.getOwnProperty = function(name) {
-        return ownProperties[name];
-    };
+    this.getOwnProperty = name => ownProperties[name];
+
     /** Set a property of the plot.
      * @param {String} name
      * @param {String} value
@@ -255,12 +226,7 @@ function Plot(id, size, parent, args) {
         return this;
     };
 
-    var i;
-    for (i in args) {
-        if (args.hasOwnProperty(i)) {
-            ownProperties[i] = args[i];
-        }
-    }
+    Object.assign(ownProperties, args);
 
     // Init svg element
     this.initialize();
@@ -472,11 +438,11 @@ Plot.prototype.properties = {
 *  This plot.
 *
 *  // Create a new Plot
-*  var myPlot = new Plot ('myPlot', 300, 300)
+*  let myPlot = new Plot ('myPlot', 300, 300)
 *  // Insert plot into web page
 *   document.body.appendChild (myPlot.getDrawing ());
 *  // Add a new Path
-*  var pathProperties = {
+*  let pathProperties = {
 *     'id': 'myPath',
 *     'stroke': 'green',
 *     'stroke-width': 2,
@@ -504,19 +470,13 @@ Plot.prototype.addPath = function(x, y, args) {
     }
 
     // Add (or replace) user arguments
-    var defaultArgs = this.getProperties('path');
-    var i;
-    for (i in args) {
-        if (args.hasOwnProperty(i)) {
-            defaultArgs[i] = args[i];
-        }
-    }
+    let defaultArgs = Object.assign(this.getProperties('path'), args);
 
     // First Node in the path
-    var newPath = this.createPath(x, y, defaultArgs);
+    let newPath = this.createPath(x, y, defaultArgs);
 
-    var xVec = new Tools.Vector(x);
-    var yVec = new Tools.Vector(y);
+    let xVec = new Tools.Vector(x);
+    let yVec = new Tools.Vector(y);
     newPath.BBox = [
         xVec.min().get(0),
         yVec.min().get(0),
@@ -534,8 +494,8 @@ Plot.prototype.addPath = function(x, y, args) {
  */
 Plot.prototype.plot = function(y, x, str) {
 
-    var errMsg = this.constructor.name + '.plot: ';
-    var i, k;
+    let errMsg = this.constructor.name + '.plot: ';
+    let i, k;
 
     // Check arguments
     if (typeof y !== 'function') {
@@ -549,17 +509,15 @@ Plot.prototype.plot = function(y, x, str) {
     } else if (!(x && x.length)) {
         throw new Error(errMsg + 'if y is a function, x must be an array');
     } else {
-        var f = y; // y is a function
-        for (y = [
-                []
-            ], i = 0; i < x.length; i++) {
+        let f = y; // y is a function
+        for (y = [[]], i = 0; i < x.length; i++) {
             y[0].push(f(x[i]));
         }
     }
 
     // Check dimensions
-    var nLines = y.length;
-    var nPts = y[0].length;
+    let nLines = y.length;
+    let nPts = y[0].length;
     if (!x) {
         for (x = [], i = 0; i < nPts; i++) {
             x.push(i + 1);
@@ -572,7 +530,7 @@ Plot.prototype.plot = function(y, x, str) {
     }
 
     // Plot everything
-    var args = Plot.stringToArgs(str);
+    let args = Plot.stringToArgs(str);
     for (k = 0; k < nLines; k++) {
         this.addPath(x, y[k], args);
     }
@@ -610,29 +568,22 @@ Plot.prototype.addHistogram = function(x, y, args) {
     x = x || new Vector(1, y.length);
 
     // Add (or replace) user arguments
-    var defaultArgs = this.getProperties('histogram');
-    var i;
-    for (i in args) {
-        if (args.hasOwnProperty(i)) {
-            defaultArgs[i] = args[i];
-        }
-    }
+    let defaultArgs = Object.assign(this.getProperties('histogram'), args);
 
     // Create histogram plot
-    var histogram = Tools.createSVGNode('g', defaultArgs);
+    let histogram = Tools.createSVGNode('g', defaultArgs);
     histogram.setAttributeNS(null, 'class', 'histogram');
 
     // Define bar model
-    var id = 'bar' + defaultArgs.id;
-    var xp = new Tools.Vector(x);
-    var widthMin = xp.derive().min().get(0);
-    var barWidth = widthMin * defaultArgs['bar-width'];
+    let id = 'bar' + defaultArgs.id;
+    let xp = new Tools.Vector(x);
+    let widthMin = xp.derive().min().get(0);
+    let barWidth = widthMin * defaultArgs['bar-width'];
 
-    var colormap = defaultArgs.colormap;
+    let colormap = defaultArgs.colormap;
 
-    var j;
-    for (j = y.length - 1; j >= 0; j--) {
-        var rect = Tools.createSVGNode('rect', defaultArgs);
+    for (let j = y.length - 1; j >= 0; j--) {
+        let rect = Tools.createSVGNode('rect', defaultArgs);
         rect.setAttributeNS(null, 'r', 1);
         rect.setAttributeNS(null, 'id', id);
         rect.setAttributeNS(null, 'class', 'histogramBar');
@@ -641,14 +592,14 @@ Plot.prototype.addHistogram = function(x, y, args) {
         rect.setAttributeNS(null, 'height', y[j]);
         rect.setAttributeNS(null, 'width', barWidth);
         if (colormap) {
-            var color = "hsl(" + (360 * j / (y.length - 1)) + ",100%,50%)";
+            let color = "hsl(" + (360 * j / (y.length - 1)) + ",100%,50%)";
             rect.setAttributeNS(null, 'fill', color);
         }
         histogram.appendChild(rect);
     }
 
-    var xVec = new Tools.Vector(x);
-    var yVec = new Tools.Vector(y);
+    let xVec = new Tools.Vector(x);
+    let yVec = new Tools.Vector(y);
     histogram.BBox = [
         xVec.min().get(0) - widthMin,
         0,
@@ -678,25 +629,17 @@ Plot.prototype.addHistogram = function(x, y, args) {
  *  // Insert plot into web page
  *  document.body.appendChild (myPlot.getDrawing ());
  */
-Plot.prototype.addImage = function(src, x, y, args) {
-    x = x || 0;
-    y = y || 0;
-    var thisPlot = this;
-    var onload = function() {
-        var defaultArgs = thisPlot.getProperties('image');
-        var i;
-        for (i in args) {
-            if (args.hasOwnProperty(i)) {
-                defaultArgs[i] = args[i];
-            }
-        }
+Plot.prototype.addImage = function(src, x = 0, y = 0, args) {
+    let thisPlot = this;
+    let onload = () => {
+        let defaultArgs = Object.assign(thisPlot.getProperties('image'), args);
 
         defaultArgs.width = this.width;
         defaultArgs.height = this.height;
         defaultArgs.x = x;
         defaultArgs.y = -y;
 
-        var image = Tools.createSVGNode('image', defaultArgs);
+        let image = Tools.createSVGNode('image', defaultArgs);
         image.setAttributeNS('http://www.w3.org/1999/xlink',
             'xlink:href', this.src);
 
@@ -708,7 +651,7 @@ Plot.prototype.addImage = function(src, x, y, args) {
 
 
     if (typeof src === 'string') {
-        var im = new Image();
+        let im = new Image();
         im.src = src;
         im.onload = onload;
     } else if (src instanceof HTMLImageElement) {
@@ -769,12 +712,11 @@ Plot.prototype.add = function(obj, x, y) {
  */
 Plot.prototype.remove = function(id) {
 
-    var curves = this.getDrawing().getElementById('curves');
-    var find = false;
+    let curves = this.getDrawing().getElementById('curves');
+    let find = false;
     if (curves.hasChildNodes()) {
-        var i;
-        var curvesChilds = curves.childNodes;
-        for (i = 0; i < curvesChilds.length; i++) {
+        let curvesChilds = curves.childNodes;
+        for (let i = 0; i < curvesChilds.length; i++) {
             if (curvesChilds[i].id === id) {
                 if (this.getOwnProperty('compute-closest')) {
                     // Remove points in tree
@@ -803,7 +745,7 @@ Plot.prototype.clear = function() {
     if (this.getOwnProperty('compute-closest')) {
         this.tree.clear();
     }
-    var curves = this.getDrawing().getElementById('curves');
+    let curves = this.getDrawing().getElementById('curves');
     if (curves.hasChildNodes()) {
         while (curves.childNodes.length > 0) {
             curves.removeChild(curves.firstChild);
@@ -825,34 +767,23 @@ Plot.prototype.clear = function() {
  *  Object with copy of element properties.
  */
 Plot.prototype.getProperties = function(element) {
-
-    var propOut = {};
-    var p = Plot.prototype.properties[element];
-    var i;
-    for (i in p) {
-        if (p.hasOwnProperty(i)) {
-            propOut[i] = p[i];
-        }
-    }
-    return propOut;
+    return Object.assign({}, this.properties[element]);
 };
 
 /**
  * @private
  * Create path.
  */
-Plot.prototype.createPath = function(x, y, args) {
-
+Plot.prototype.createPath = function (x, y, args) {
 
     // First Node in the path
-    var points = '';
-    var j, L = x.length;
-    for (j = 0; j < L; j++) {
+    let points = '';
+    for (let j = 0, L = x.length; j < L; j++) {
         points += x[j] + ',' + (-y[j]) + ' ';
     }
 
     // Create Polyline
-    var path = Tools.createSVGNode('polyline', args);
+    let path = Tools.createSVGNode('polyline', args);
     path.setAttributeNS(null, 'class', 'path');
 
     // Add point list as attribute
@@ -867,30 +798,23 @@ Plot.prototype.createPath = function(x, y, args) {
  * @private
  *  Create a markerfor a new path.
  */
-Plot.prototype.setMarkerPath = function(path, args) {
-
-    var svg = this.getDrawing();
-    var drawingArea = svg.getElementById('drawingArea');
-    var markers = svg.getElementById('markers');
-    var defaultArgs = this.getProperties('marker');
-    var i;
-    for (i in args) {
-        if (args.hasOwnProperty(i)) {
-            defaultArgs[i] = args[i];
-        }
-    }
-    var idNumber = this.getOwnProperty('autoId-marker');
+Plot.prototype.setMarkerPath = function (path, args) {
+    let svg = this.getDrawing();
+    let drawingArea = svg.getElementById('drawingArea');
+    let markers = svg.getElementById('markers');
+    let defaultArgs = Object.assign(this.getProperties('marker'), args);
+    let idNumber = this.getOwnProperty('autoId-marker');
     this.setOwnProperty('autoId-marker', idNumber + 1);
-    var id = this.getId() + 'marker_' + idNumber.toString();
+    let id = this.getId() + 'marker_' + idNumber.toString();
     id = id.replace(/ /g, "_");
     defaultArgs.id = id;
 
-    var marker = Tools.createSVGNode('marker', defaultArgs);
+    let marker = Tools.createSVGNode('marker', defaultArgs);
     markers.appendChild(marker);
     this.setMarkerShape(marker, defaultArgs.shape);
 
     path.setAttribute('marker-id', id);
-    var markerUrl = 'url(#' + id + ')';
+    let markerUrl = 'url(#' + id + ')';
     path.setAttribute('marker-start', markerUrl);
     path.setAttribute('marker-mid', markerUrl);
     path.setAttribute('marker-end', markerUrl);
@@ -902,15 +826,14 @@ Plot.prototype.setMarkerPath = function(path, args) {
  *  Set the marker base shape.
  *  Marker base sould be in following bounding box [-0.5, -0.5, 0.5, 0.5].
  */
-Plot.prototype.setMarkerShape = function(marker, shape) {
+Plot.prototype.setMarkerShape = function (marker, shape) {
 
-    var i;
-    for (i = 0; i < marker.childNodes.length; i++) {
+    for (let i = 0; i < marker.childNodes.length; i++) {
         marker.removeChild(marker.childNodes[i]);
     }
 
-    var shapeProperties;
-    var markerShape;
+    let shapeProperties;
+    let markerShape;
     switch (shape.toLowerCase()) {
         case 'rect':
         case 'rectangle':
@@ -972,20 +895,20 @@ Plot.prototype.setMarkerShape = function(marker, shape) {
  *  // Automatic axis
  *  myPlot.setAxis ();
  */
-Plot.prototype.setAxis = function(curvesBBox) {
-    var svg = this.getDrawing();
-    var drawingArea = svg.getElementById('drawingArea');
-    var curves = svg.getElementById('curves');
-    var w = drawingArea.width.baseVal.value,
+Plot.prototype.setAxis = function (curvesBBox) {
+    let svg = this.getDrawing();
+    let drawingArea = svg.getElementById('drawingArea');
+    let curves = svg.getElementById('curves');
+    let w = drawingArea.width.baseVal.value,
         h = drawingArea.height.baseVal.value;
 
-    var BBox, xlim, ylim;
+    let BBox, xlim, ylim;
     // Matlab like command
     if (curvesBBox instanceof Array) {
-        var x = Math.min(curvesBBox[0], curvesBBox[2]);
-        var y = Math.min(-curvesBBox[1], -curvesBBox[3]);
-        var width = Math.max(curvesBBox[0], curvesBBox[2]) - x;
-        var height = Math.max(-curvesBBox[1], -curvesBBox[3]) - y;
+        let x = Math.min(curvesBBox[0], curvesBBox[2]);
+        let y = Math.min(-curvesBBox[1], -curvesBBox[3]);
+        let width = Math.max(curvesBBox[0], curvesBBox[2]) - x;
+        let height = Math.max(-curvesBBox[1], -curvesBBox[3]) - y;
         BBox = {
             'x': x,
             'y': y,
@@ -997,9 +920,8 @@ Plot.prototype.setAxis = function(curvesBBox) {
         BBox = curvesBBox;
         // Path bounding box
     } else if (typeof curvesBBox === 'string') {
-        var i;
-        var curvesChilds = curves.childNodes;
-        for (i = 0; i < curvesChilds.length; i++) {
+        let curvesChilds = curves.childNodes;
+        for (let i = 0; i < curvesChilds.length; i++) {
             if (curvesChilds[i].id === curvesBBox) {
                 this.setAxis(curvesChilds[i].BBox);
                 return this;
@@ -1012,9 +934,9 @@ Plot.prototype.setAxis = function(curvesBBox) {
 
     if (this.getOwnProperty('preserve-ratio')) {
         // Compute the scale
-        var hScale = BBox.width / w,
+        let hScale = BBox.width / w,
             vScale = BBox.height / h;
-        var space;
+        let space;
         switch (Math.max(hScale, vScale)) {
             case hScale:
                 space = BBox.height;
@@ -1038,12 +960,12 @@ Plot.prototype.setAxis = function(curvesBBox) {
         BBox.y -= 0.5;
     }
     this.setCurrentAxis(BBox);
-    var viewBox = BBox.x + ' ' + BBox.y + ' ' + BBox.width + ' ' + BBox.height;
+    let viewBox = BBox.x + ' ' + BBox.y + ' ' + BBox.width + ' ' + BBox.height;
     drawingArea.setAttributeNS(null, 'viewBox', viewBox);
 
     this.scaleElements();
     // Update front
-    var bg = svg.getElementById('front');
+    let bg = svg.getElementById('front');
     bg.setAttributeNS(null, 'x', BBox.x);
     bg.setAttributeNS(null, 'y', BBox.y);
     bg.setAttributeNS(null, 'width', BBox.width);
@@ -1060,24 +982,24 @@ Plot.prototype.setAxis = function(curvesBBox) {
  *  Create xAxis view.
  */
 Plot.prototype.setXAxis = function() {
-    var svg = this.getDrawing();
+    let svg = this.getDrawing();
 
-    var xAxis = svg.getElementById('xAxis');
-    var xAxisLine = svg.getElementById('xAxisLine');
-    var xAxisLineBis = svg.getElementById('xAxisLineBis');
+    let xAxis = svg.getElementById('xAxis');
+    let xAxisLine = svg.getElementById('xAxisLine');
+    let xAxisLineBis = svg.getElementById('xAxisLineBis');
 
-    var dArea = svg.getElementById('drawingArea');
+    let dArea = svg.getElementById('drawingArea');
 
-    var BBoxCurves = this.getCurrentAxis();
+    let BBoxCurves = this.getCurrentAxis();
 
-    var BBox = {
+    let BBox = {
         x: dArea.x.baseVal.value,
         y: dArea.y.baseVal.value,
         width: dArea.width.baseVal.value,
         height: dArea.height.baseVal.value
     };
 
-    var xTextTicks = svg.getElementById('xTextTicks');
+    let xTextTicks = svg.getElementById('xTextTicks');
     while (xTextTicks.childNodes.length > 0) {
         xTextTicks.removeChild(xTextTicks.firstChild);
     }
@@ -1134,46 +1056,47 @@ Plot.prototype.setXAxis = function() {
  */
 Plot.prototype.setYAxis = function() {
 
-    var svg = this.getDrawing();
+    let svg = this.getDrawing();
 
-    var yAxis = svg.getElementById('yAxis');
-    var yAxisLine = svg.getElementById('yAxisLine');
-    var yAxisLineBis = svg.getElementById('yAxisLineBis');
+    let yAxis = svg.getElementById('yAxis');
+    let yAxisLine = svg.getElementById('yAxisLine');
+    let yAxisLineBis = svg.getElementById('yAxisLineBis');
 
-    var dArea = svg.getElementById('drawingArea');
+    let dArea = svg.getElementById('drawingArea');
 
-    var BBoxCurves = this.getCurrentAxis();
+    let BBoxCurves = this.getCurrentAxis();
 
-    var BBox = {
+    let BBox = {
         x: dArea.x.baseVal.value,
         y: dArea.y.baseVal.value,
         width: dArea.width.baseVal.value,
         height: dArea.height.baseVal.value
     };
 
-    var yTextTicks = svg.getElementById('yTextTicks');
+    let yTextTicks = svg.getElementById('yTextTicks');
     while (yTextTicks.childNodes.length > 0) {
         yTextTicks.removeChild(yTextTicks.firstChild);
     }
 
-    var i;
-    var points = BBox.x + ',' + (BBox.y) + ' ';
-    var pointsBis = (BBox.x + BBox.width) + ',' + (BBox.y) + ' ';
+    let points = BBox.x + ',' + (BBox.y) + ' ';
+    let pointsBis = (BBox.x + BBox.width) + ',' + (BBox.y) + ' ';
     if (this.getOwnProperty('ticks-display')) {
-        var scale = BBox.height / BBoxCurves.height;
-        var yLim = this.getAxisLimits(BBoxCurves.y, BBoxCurves.height, 2);
-        var linspace = Tools.Vector.linearSpace;
-        var ind = linspace(BBox.y + (yLim.min - BBoxCurves.y) * scale,
+        let scale = BBox.height / BBoxCurves.height;
+        let yLim = this.getAxisLimits(BBoxCurves.y, BBoxCurves.height, 2);
+        let linspace = Tools.Vector.linearSpace;
+        let ind = linspace(
+            BBox.y + (yLim.min - BBoxCurves.y) * scale,
             BBox.y + (yLim.min - BBoxCurves.y + (yLim.nTicks - 1) * yLim.dTick) * scale,
-            yLim.nTicks).data;
+            yLim.nTicks
+        ).data;
 
-        for (i = 0; i < ind.length; i++) {
+        for (let i = 0; i < ind.length; i++) {
             points += BBox.x + ',' + ind[i] + ' ';
             pointsBis += (BBox.x + BBox.width) + ',' + ind[i] + ' ';
         }
 
-        var exponent = yLim.e10;
-        var tickText, textProp = this.getProperties('textTicks');
+        let exponent = yLim.e10;
+        let tickText, textProp = this.getProperties('textTicks');
         textProp.x = BBox.x - 15;
 
         if (Math.abs(exponent) < 2) {
@@ -1185,11 +1108,13 @@ Plot.prototype.setYAxis = function() {
             yTextTicks.appendChild(tickText);
         }
 
-        var val = linspace(-yLim.min,
+        let val = linspace(
+            -yLim.min,
             -(yLim.min + (yLim.nTicks - 1) * yLim.dTick),
-            yLim.nTicks).data;
-        var fontSize = parseFloat(this.getProperties('axis')['font-size']);
-        for (i = 0; i < ind.length; i++) {
+            yLim.nTicks
+        ).data;
+        let fontSize = parseFloat(this.getProperties('axis')['font-size']);
+        for (let i = 0; i < ind.length; i++) {
             textProp.y = ind[i] + fontSize / 2;
             val[i] = parseFloat((val[i] * Math.pow(10, -exponent)).toFixed(2));
             tickText = Tools.createSVGTextNode(val[i], textProp);
@@ -1209,36 +1134,30 @@ Plot.prototype.setYAxis = function() {
  */
 Plot.prototype.getAxisLimits = function(minValue, widthValue) {
 
-    var nTicksMax = 10;
-    var rounds = [1, 2, 5];
+    let nTicksMax = 10;
+    let rounds = [1, 2, 5];
 
     // Tools
-    var k, kBest;
-    var log10 = function(x) {
-        return Math.log(x) / Math.LN10;
-    };
-    var pow10 = function(x) {
-        return Math.pow(10, x);
-    };
+    let k, kBest;
 
     // Find the best spacing
-    var dTickMinLog = log10(widthValue / nTicksMax);
-    var dTickBestLog = dTickMinLog + 2;
+    let dTickMinLog = Math.log10(widthValue / nTicksMax);
+    let dTickBestLog = dTickMinLog + 2;
     for (k = 0; k < rounds.length; k++) {
-        var offset = log10(rounds[k]);
-        var dTickTmpLog = Math.ceil(dTickMinLog - offset) + offset;
+        let offset = Math.log10(rounds[k]);
+        let dTickTmpLog = Math.ceil(dTickMinLog - offset) + offset;
         if (dTickTmpLog < dTickBestLog) {
             dTickBestLog = dTickTmpLog;
             kBest = k;
         }
     }
-    var exponent = Math.floor(dTickBestLog);
-    var dTick = rounds[kBest] * pow10(exponent);
+    let exponent = Math.floor(dTickBestLog);
+    let dTick = rounds[kBest] *  10 ** exponent;
 
     // Find first tick and number of ticks
-    var minTick = Math.ceil(minValue / dTick) * dTick;
-    var maxTick = Math.floor((minValue + widthValue) / dTick) * dTick;
-    var nTicks = 1 + Math.round((maxTick - minTick) / dTick);
+    let minTick = Math.ceil(minValue / dTick) * dTick;
+    let maxTick = Math.floor((minValue + widthValue) / dTick) * dTick;
+    let nTicks = 1 + Math.round((maxTick - minTick) / dTick);
 
     return {
         'min': minTick,
@@ -1255,15 +1174,14 @@ Plot.prototype.getAxisLimits = function(minValue, widthValue) {
  */
 Plot.prototype.getCurvesBBox = function() {
 
-    var curves = this.getDrawing().getElementById('curves');
-    var mBBox = [0, 0, 1, 1];
+    let curves = this.getDrawing().getElementById('curves');
+    let mBBox = [0, 0, 1, 1];
 
     if (curves.hasChildNodes()) {
         mBBox = curves.childNodes[0].BBox;
-        var i;
-        var curvesChilds = curves.childNodes;
-        for (i = 1; i < curvesChilds.length; i++) {
-            var BB = curvesChilds[i].BBox;
+        let curvesChilds = curves.childNodes;
+        for (let i = 1; i < curvesChilds.length; i++) {
+            let BB = curvesChilds[i].BBox;
 
             mBBox[0] = BB[0] < mBBox[0] ? BB[0] : mBBox[0];
             mBBox[1] = BB[1] < mBBox[1] ? BB[1] : mBBox[1];
@@ -1271,7 +1189,7 @@ Plot.prototype.getCurvesBBox = function() {
             mBBox[3] = BB[3] > mBBox[3] ? BB[3] : mBBox[3];
         }
     }
-    var BBox = {
+    let BBox = {
         x: mBBox[0],
         y: -mBBox[3],
         width: mBBox[2] - mBBox[0],
@@ -1287,40 +1205,23 @@ Plot.prototype.getCurvesBBox = function() {
  */
 Plot.prototype.scaleElements = function() {
 
-    var svg = this.getDrawing();
-    var drawingArea = svg.getElementById('drawingArea');
-    var w = drawingArea.width.baseVal.value;
-    var h = drawingArea.height.baseVal.value;
+    let svg = this.getDrawing();
+    let drawingArea = svg.getElementById('drawingArea');
+    let w = drawingArea.width.baseVal.value;
+    let h = drawingArea.height.baseVal.value;
 
     // Specific scaling for scatter plot
-    var markers = svg.getElementById('markers').childNodes;
-    var scaleX = 2 * this.getCurrentAxis().width / w;
-    var scaleY = 2 * this.getCurrentAxis().height / h;
+    let markers = svg.getElementById('markers').childNodes;
+    let scaleX = 2 * this.getCurrentAxis().width / w;
+    let scaleY = 2 * this.getCurrentAxis().height / h;
 
-    var m;
-    for (m = 0; m < markers.length; m++) {
-        /*
-                if (markers[m].firstChild) {
-                var size = markers[m].getAttribute('size');
-                var scaling = 'scale(' + (scaleX * size) + ', ' + (scaleY * size) + ') ';
-                markers[m].firstChild.setAttributeNS(null, 'transform', scaling);
-            }
-            */
+    for (let m = 0; m < markers.length; m++) {
         markers[m].setAttributeNS(null, 'markerWidth',
             scaleX * markers[m].getAttribute('size'));
         markers[m].setAttributeNS(null, 'markerHeight',
             scaleY * markers[m].getAttribute('size'));
     }
 
-    // Automatic non-scaleing-stroke properties for firefox
-    /*
-        // Specific scaling for scatter plot
-        var curvesNodes = svg.getElementById('curves').childNodes;
-        var scale = (scaleX + scaleY) / 2.0;
-        for (m = 0; m < curvesNodes.length; m++) {
-        curvesNodes[m].setAttributeNS(null, 'stroke-width', scale);
-    }
-    */
 };
 
 
@@ -1344,12 +1245,10 @@ Plot.prototype.scaleElements = function() {
  *  // Set title
  *  myPlot.setTitle ('My plot !');
  */
-Plot.prototype.setTitle = function(text, xLabel, yLabel) {
+Plot.prototype.setTitle = function(text = "", xLabel, yLabel) {
 
-    text = text || '';
-
-    var svg = this.getDrawing();
-    var title = svg.getElementById('title');
+    let svg = this.getDrawing();
+    let title = svg.getElementById('title');
     if (title.hasChildNodes()) {
         while (title.childNodes.length > 0) {
             title.removeChild(title.firstChild);
@@ -1361,12 +1260,8 @@ Plot.prototype.setTitle = function(text, xLabel, yLabel) {
     } else {
         this.setOwnProperty('title-display', false);
     }
-    if (xLabel !== undefined) {
-        this.setXLabel(xLabel);
-    }
-    if (yLabel !== undefined) {
-        this.setYLabel(yLabel);
-    }
+    this.setXLabel(xLabel);
+    this.setYLabel(yLabel);
     this.autoDisplay();
     return this;
 };
@@ -1384,8 +1279,7 @@ Plot.prototype.setTitle = function(text, xLabel, yLabel) {
  *  // Set x and y labels
  *  myPlot.setLabels ('x Label', 'y Label');
  */
-Plot.prototype.setLabels = function(xLabel, yLabel) {
-
+Plot.prototype.setLabels = function(xLabel = "", yLabel = "") {
     this.setXLabel(xLabel);
     this.setYLabel(yLabel);
     return this;
@@ -1403,12 +1297,10 @@ Plot.prototype.setLabels = function(xLabel, yLabel) {
 *  // Set x label
 *  myPlot.setXLabel ('x Label');
 */
-Plot.prototype.setXLabel = function(text) {
+Plot.prototype.setXLabel = function(text = "") {
 
-    text = text || '';
-
-    var svg = this.getDrawing();
-    var xLabel = svg.getElementById('xLabel');
+    let svg = this.getDrawing();
+    let xLabel = svg.getElementById('xLabel');
     if (xLabel.hasChildNodes()) {
         while (xLabel.childNodes.length > 0) {
             xLabel.removeChild(xLabel.firstChild);
@@ -1436,12 +1328,10 @@ Plot.prototype.setXLabel = function(text) {
  *  // Set y label
  *  myPlot.setYLabel ('y Label');
  */
-Plot.prototype.setYLabel = function(text) {
+Plot.prototype.setYLabel = function(text = "") {
 
-    text = text || '';
-
-    var svg = this.getDrawing();
-    var yLabel = svg.getElementById('yLabel');
+    let svg = this.getDrawing();
+    let yLabel = svg.getElementById('yLabel');
     if (yLabel.hasChildNodes()) {
         while (yLabel.childNodes.length > 0) {
             yLabel.removeChild(yLabel.firstChild);
@@ -1467,12 +1357,12 @@ Plot.prototype.setYLabel = function(text) {
 Plot.prototype.rotateYLabel = function() {
 
 
-    var svg = this.getDrawing();
-    var yLabel = svg.getElementById('yLabel');
+    let svg = this.getDrawing();
+    let yLabel = svg.getElementById('yLabel');
 
-    var BBox = yLabel.getBBox();
-    var cx = (BBox.x + BBox.width / 2);
-    var cy = (BBox.y + BBox.height / 2);
+    let BBox = yLabel.getBBox();
+    let cx = (BBox.x + BBox.width / 2);
+    let cy = (BBox.y + BBox.height / 2);
     yLabel.setAttributeNS(null, 'transform', 'rotate(-90, ' + cx + ', ' + cy + ')');
     return this;
 };
@@ -1487,10 +1377,10 @@ Plot.prototype.rotateYLabel = function() {
  * @private
  *  Create plot legend.
  */
-Plot.prototype.setLegend = function() {
+Plot.prototype.setLegend = function () {
 
-    var svg = this.getDrawing();
-    var legend = svg.getElementById('legend');
+    let svg = this.getDrawing();
+    let legend = svg.getElementById('legend');
     while (legend.childNodes.length > 0) {
         legend.removeChild(legend.firstChild);
     }
@@ -1498,47 +1388,45 @@ Plot.prototype.setLegend = function() {
     // Element have to be render for determine its measures
     legend.setAttributeNS(null, 'display', 'inline');
 
-    var curves = svg.getElementById('curves');
-    var drawingArea = svg.getElementById('drawingArea');
-    var markers = Tools.createSVGNode('defs', {
+    let curves = svg.getElementById('curves');
+    let drawingArea = svg.getElementById('drawingArea');
+    let markers = Tools.createSVGNode('defs', {
         id: 'legendMarkers'
     });
-    var i;
+
     legend.appendChild(markers);
-    var pad = 5;
-    var sBox = {
+    let pad = 5;
+    let sBox = {
         'width': 20,
         'height': 20
     };
     if (curves.hasChildNodes()) {
-        var curvesChilds = curves.childNodes;
-        var xPos = 0,
-            yPos = 0;
-        for (i = 0; i < curvesChilds.length; i++) {
+        let curvesChilds = curves.childNodes;
+        let xPos = 0, yPos = 0;
+        for (let i = 0; i < curvesChilds.length; i++) {
             if (curvesChilds[i].getAttribute('legend') !== 'none') {
                 // Text
-                var text = curvesChilds[i].getAttribute('legend') || curvesChilds[i].getAttribute('id');
-                var id = 'legendTextId_' + i;
-                var textNode = Tools.createSVGTextNode(text, {
-                    'id': id
-                });
+                let text = curvesChilds[i].getAttribute('legend') || curvesChilds[i].getAttribute('id');
+                let id = 'legendTextId_' + i;
+                let textNode = Tools.createSVGTextNode(text, {'id': id});
                 legend.appendChild(textNode);
-                var BBox = textNode.getBBox();
+
+                let BBox = textNode.getBBox();
                 textNode.setAttributeNS(null, 'x', xPos + sBox.width + 5);
 
                 // Sample
-                var sample;
+                let sample
                 switch (curvesChilds[i].tagName) {
                     case 'image':
-                        var sampleProperties = {
+                        let sampleProperties = {
                             'x': xPos,
                             'y': yPos - 2 * sBox.height / 3,
                             'width': sBox.width,
                             'height': sBox.height
                         };
                         sample = Tools.createSVGNode('image', sampleProperties);
-                        var xlinkNS = 'http://www.w3.org/1999/xlink';
-                        var link = curvesChilds[i].getAttributeNS(xlinkNS, 'href');
+                        let xlinkNS = 'http://www.w3.org/1999/xlink';
+                        let link = curvesChilds[i].getAttributeNS(xlinkNS, 'href');
                         sample.setAttributeNS(xlinkNS, 'xlink:href', link);
                         break;
                     case 'polyline':
@@ -1547,9 +1435,9 @@ Plot.prototype.setLegend = function() {
                         sample.removeAttributeNS(null, 'marker-end');
                         sample.removeAttributeNS(null, 'marker-start');
                         if (sample.getAttribute('marker-mid')) {
-                            var markerId = sample.getAttribute('marker-mid').split('#')[1].split(')')[0];
-                            var marker = svg.getElementById(markerId).cloneNode(true);
-                            var markerSize = marker.getAttribute('size');
+                            let markerId = sample.getAttribute('marker-mid').split('#')[1].split(')')[0];
+                            let marker = svg.getElementById(markerId).cloneNode(true);
+                            let markerSize = marker.getAttribute('size');
                             markers.appendChild(marker);
                             marker.removeAttributeNS(null, 'transform');
                             marker.setAttributeNS(null, 'markerWidth', markerSize * 2);
@@ -1557,8 +1445,8 @@ Plot.prototype.setLegend = function() {
                             marker.setAttributeNS(null, 'id', markerId + '_legend');
                             sample.setAttributeNS(null, 'marker-mid', 'url(#' + markerId + '_legend' + ')');
                         }
-                        var ySample = yPos - BBox.height / 3;
-                        var points = xPos + ',' + ySample + ' ' +
+                        let ySample = yPos - BBox.height / 3;
+                        let points = xPos + ',' + ySample + ' ' +
                             (xPos + sBox.width / 2) + ',' + ySample + ' ' +
                             (xPos + sBox.width) + ',' + ySample + ' ';
                         sample.setAttributeNS(null, 'points', points);
@@ -1579,8 +1467,8 @@ Plot.prototype.setLegend = function() {
     } else {
         return this;
     }
-    var legendBBox = legend.getBBox();
-    var frontProp = {
+    let legendBBox = legend.getBBox();
+    let frontProp = {
         'fill': 'white',
         'x': legendBBox.x - pad,
         'y': legendBBox.y - pad,
@@ -1589,10 +1477,10 @@ Plot.prototype.setLegend = function() {
         'stroke': 'gray',
         'stroke-width': 2
     };
-    var front = Tools.createSVGNode('rect', frontProp);
+    let front = Tools.createSVGNode('rect', frontProp);
     legend.insertBefore(front, legend.firstChild);
     legendBBox = legend.getBBox();
-    var viewBox = legendBBox.x + ' ' + legendBBox.y + ' ' + legendBBox.width + ' ' + legendBBox.height;
+    let viewBox = legendBBox.x + ' ' + legendBBox.y + ' ' + legendBBox.width + ' ' + legendBBox.height;
     legend.setAttributeNS(null, 'viewBox', viewBox);
     legend.setAttributeNS(null, 'width', legendBBox.width);
     legend.setAttributeNS(null, 'height', legendBBox.height);
@@ -1607,9 +1495,9 @@ Plot.prototype.setLegend = function() {
  */
 Plot.prototype.getLegendLocation = function(location) {
 
-    var svg = this.getDrawing();
-    var legend = svg.getElementById('legend');
-    var legendBBox;
+    let svg = this.getDrawing();
+    let legend = svg.getElementById('legend');
+    let legendBBox;
     try {
         legendBBox = legend.getBBox();
     } catch (e) {
@@ -1617,26 +1505,26 @@ Plot.prototype.getLegendLocation = function(location) {
     }
 
     // drawing area
-    var drawingArea = svg.getElementById('drawingArea');
-    var dABBox = {
+    let drawingArea = svg.getElementById('drawingArea');
+    let dABBox = {
         'x': drawingArea.x.baseVal.value,
         'y': drawingArea.y.baseVal.value,
         'width': drawingArea.width.baseVal.value,
         'height': drawingArea.height.baseVal.value
     };
-    var margin = 0.02 * Math.min(dABBox.width, dABBox.height);
+    let margin = 0.02 * Math.min(dABBox.width, dABBox.height);
 
-    var xMin = [
+    let xMin = [
         dABBox.x + margin,
         dABBox.x + (dABBox.width - legendBBox.width) / 2,
         dABBox.x + dABBox.width - legendBBox.width - margin
     ];
-    var yMin = [
+    let yMin = [
         dABBox.y + margin,
         dABBox.y + (dABBox.height - legendBBox.height) / 2,
         dABBox.y + dABBox.height - legendBBox.height - margin
     ];
-    var w = legendBBox.width,
+    let w = legendBBox.width,
         h = legendBBox.height;
     switch (location.toLowerCase()) {
         case 'nw':
@@ -1683,17 +1571,17 @@ Plot.prototype.getLegendAutoLocation = function() {
     if (!this.getOwnProperty('compute-closest')) {
         return 'ne';
     }
-    var locations = ['ne', 'se', 'nw',
+    let locations = [
+        'ne', 'se', 'nw',
         'w', 'n', 'e',
         's', 'w', 'c'
     ];
 
-    var count = [];
+    let count = [];
 
     // Initalization
-    var i;
-    var l = this.getLegendLocation(locations[0]);
-    var min, max;
+    let l = this.getLegendLocation(locations[0]);
+    let min, max;
     try {
         min = this.getCoordinates(l[0], l[1], false);
         max = this.getCoordinates(l[2], l[3], false);
@@ -1702,9 +1590,9 @@ Plot.prototype.getLegendAutoLocation = function() {
     }
     count[0] = this.tree.count(min.x, min.y, max.x - min.x, max.y - min.y);
 
-    var locMin = 0;
+    let locMin = 0;
 
-    for (i = 1; i < locations.length; i++) {
+    for (let i = 1; i < locations.length; i++) {
         l = this.getLegendLocation(locations[i]);
         min = this.getCoordinates(l[0], l[1], false);
         max = this.getCoordinates(l[2], l[3], false);
@@ -1725,9 +1613,9 @@ Plot.prototype.getLegendAutoLocation = function() {
  */
 Plot.prototype.setLegendLocation = function() {
 
-    var location = this.getOwnProperty('legend-display');
-    var svg = this.getDrawing();
-    var legend = svg.getElementById('legend');
+    let location = this.getOwnProperty('legend-display');
+    let svg = this.getDrawing();
+    let legend = svg.getElementById('legend');
 
     if (location === 'none') {
         legend.setAttributeNS(null, 'display', 'none');
@@ -1753,94 +1641,94 @@ Plot.prototype.setLegendLocation = function() {
 Plot.prototype.initialize = function() {
 
     // Set UI parameters
-    var svg = this.getDrawing();
-    var parent = this.getParentNode();
+    let svg = this.getDrawing();
+    let parent = this.getParentNode();
     parent.appendChild(svg);
 
     // Drawing area
-    var drawingAreaProperties = this.getProperties('drawingArea');
-    var drawingArea = Tools.createSVGNode('svg', drawingAreaProperties);
+    let drawingAreaProperties = this.getProperties('drawingArea');
+    let drawingArea = Tools.createSVGNode('svg', drawingAreaProperties);
     svg.appendChild(drawingArea);
 
     // Nodes containing data Path
-    var curvesProperties = this.getProperties('curves');
-    var curves = Tools.createSVGNode('g', curvesProperties);
+    let curvesProperties = this.getProperties('curves');
+    let curves = Tools.createSVGNode('g', curvesProperties);
     drawingArea.appendChild(curves);
 
     // Nodes containing data Path
-    var markersProperties = this.getProperties('markers');
-    var markers = Tools.createSVGNode('defs', markersProperties);
+    let markersProperties = this.getProperties('markers');
+    let markers = Tools.createSVGNode('defs', markersProperties);
     drawingArea.appendChild(markers);
 
     // Cursor
-    var cursorProperties = this.getProperties('cursor');
-    var cursor = Tools.createSVGNode('polyline', cursorProperties);
+    let cursorProperties = this.getProperties('cursor');
+    let cursor = Tools.createSVGNode('polyline', cursorProperties);
     this.setMarkerPath(cursor, cursorProperties.marker);
     drawingArea.appendChild(cursor);
 
     // Drawing area front
-    var frontProperties = this.getProperties('front');
-    var front = Tools.createSVGNode('rect', frontProperties);
+    let frontProperties = this.getProperties('front');
+    let front = Tools.createSVGNode('rect', frontProperties);
     drawingArea.appendChild(front);
 
     // Axis
-    var axisProperties = this.getProperties('axis');
-    var axis = Tools.createSVGNode('g', axisProperties);
+    let axisProperties = this.getProperties('axis');
+    let axis = Tools.createSVGNode('g', axisProperties);
     svg.appendChild(axis);
 
     // Tick marker
-    var ticksMarkerProp = this.getProperties('ticks');
-    var ticksMarker = Tools.createSVGNode('marker', ticksMarkerProp);
-    var ticksLine = Tools.createSVGNode('line', ticksMarkerProp);
+    let ticksMarkerProp = this.getProperties('ticks');
+    let ticksMarker = Tools.createSVGNode('marker', ticksMarkerProp);
+    let ticksLine = Tools.createSVGNode('line', ticksMarkerProp);
     ticksMarker.appendChild(ticksLine);
     axis.appendChild(ticksMarker);
 
     // x Axis
-    var xAxisProp = this.getProperties('xAxis');
-    var xAxis = Tools.createSVGNode('g', xAxisProp);
-    var xAxisLineProp = this.getProperties('xAxisLine');
-    var xAxisLine = Tools.createSVGNode('polyline', xAxisLineProp);
-    var xAxisLineBisProp = this.getProperties('xAxisLineBis');
-    var xAxisLineBis = Tools.createSVGNode('polyline', xAxisLineBisProp);
-    var xTextTicksProp = this.getProperties('xTextTicks');
-    var xTextTicks = Tools.createSVGNode('g', xTextTicksProp);
+    let xAxisProp = this.getProperties('xAxis');
+    let xAxis = Tools.createSVGNode('g', xAxisProp);
+    let xAxisLineProp = this.getProperties('xAxisLine');
+    let xAxisLine = Tools.createSVGNode('polyline', xAxisLineProp);
+    let xAxisLineBisProp = this.getProperties('xAxisLineBis');
+    let xAxisLineBis = Tools.createSVGNode('polyline', xAxisLineBisProp);
+    let xTextTicksProp = this.getProperties('xTextTicks');
+    let xTextTicks = Tools.createSVGNode('g', xTextTicksProp);
     xAxis.appendChild(xAxisLine);
     xAxis.appendChild(xAxisLineBis);
     xAxis.appendChild(xTextTicks);
     axis.appendChild(xAxis);
 
     // y Axis
-    var yAxisProp = this.getProperties('yAxis');
-    var yAxis = Tools.createSVGNode('g', yAxisProp);
-    var yAxisLineProp = this.getProperties('yAxisLine');
-    var yAxisLine = Tools.createSVGNode('polyline', yAxisLineProp);
-    var yAxisLineBisProp = this.getProperties('yAxisLineBis');
-    var yAxisLineBis = Tools.createSVGNode('polyline', yAxisLineBisProp);
-    var yTextTicksProp = this.getProperties('yTextTicks');
-    var yTextTicks = Tools.createSVGNode('g', yTextTicksProp);
+    let yAxisProp = this.getProperties('yAxis');
+    let yAxis = Tools.createSVGNode('g', yAxisProp);
+    let yAxisLineProp = this.getProperties('yAxisLine');
+    let yAxisLine = Tools.createSVGNode('polyline', yAxisLineProp);
+    let yAxisLineBisProp = this.getProperties('yAxisLineBis');
+    let yAxisLineBis = Tools.createSVGNode('polyline', yAxisLineBisProp);
+    let yTextTicksProp = this.getProperties('yTextTicks');
+    let yTextTicks = Tools.createSVGNode('g', yTextTicksProp);
     yAxis.appendChild(yAxisLine);
     yAxis.appendChild(yAxisLineBis);
     yAxis.appendChild(yTextTicks);
     axis.appendChild(yAxis);
 
     // Title
-    var titleProperties = this.getProperties('title');
-    var title = Tools.createSVGTextNode('', titleProperties);
+    let titleProperties = this.getProperties('title');
+    let title = Tools.createSVGTextNode('', titleProperties);
     svg.appendChild(title);
 
     // xLabel
-    var xLabelProperties = this.getProperties('xLabel');
-    var xLabel = Tools.createSVGTextNode('', xLabelProperties);
+    let xLabelProperties = this.getProperties('xLabel');
+    let xLabel = Tools.createSVGTextNode('', xLabelProperties);
     svg.appendChild(xLabel);
 
     // yLabel
-    var yLabelProperties = this.getProperties('yLabel');
-    var yLabel = Tools.createSVGTextNode('', yLabelProperties);
+    let yLabelProperties = this.getProperties('yLabel');
+    let yLabel = Tools.createSVGTextNode('', yLabelProperties);
     svg.appendChild(yLabel);
 
     // Legend
-    var legendProperties = this.getProperties('legend');
-    var legend = Tools.createSVGNode('svg', legendProperties);
+    let legendProperties = this.getProperties('legend');
+    let legend = Tools.createSVGNode('svg', legendProperties);
     svg.appendChild(legend);
 
     this.initializeEvents();
@@ -1857,12 +1745,12 @@ Plot.prototype.initialize = function() {
  */
 Plot.prototype.initializeEvents = function() {
 
-    var svg = this.getDrawing();
-    var front = svg.getElementById('drawingArea').getElementById('front');
+    let svg = this.getDrawing();
+    let front = svg.getElementById('drawingArea').getElementById('front');
 
     // Set events Parameters
-    var thisPlot = this;
-    var onMouseDown = function(event) {
+    let thisPlot = this;
+    let onMouseDown = function(event) {
         event.stopPropagation();
         event.preventDefault();
         thisPlot.coordDown = thisPlot.getCoordinates(event.clientX, event.clientY);
@@ -1870,17 +1758,17 @@ Plot.prototype.initializeEvents = function() {
         thisPlot.coordDown.clientY = event.clientY;
         thisPlot.mousedown(thisPlot.coordDown, event);
     };
-    var onMouseMove = function(event) {
+    let onMouseMove = function(event) {
         event.stopPropagation();
         event.preventDefault();
-        var coord = thisPlot.getCoordinates(event.clientX, event.clientY);
+        let coord = thisPlot.getCoordinates(event.clientX, event.clientY);
         thisPlot.mousemove(coord, event);
     };
-    var onMouseUp = function(event) {
+    let onMouseUp = function(event) {
         event.stopPropagation();
         event.preventDefault();
-        var newCoord = thisPlot.getCoordinates(event.clientX, event.clientY);
-        var oldCoord = thisPlot.coordDown;
+        let newCoord = thisPlot.getCoordinates(event.clientX, event.clientY);
+        let oldCoord = thisPlot.coordDown;
         if (oldCoord === undefined) {
             return;
         }
@@ -1898,11 +1786,11 @@ Plot.prototype.initializeEvents = function() {
         delete thisPlot.coordDown;
     };
 
-    var onMouseWheel = function(event) {
+    let onMouseWheel = function(event) {
         event.stopPropagation();
         event.preventDefault();
-        var coord = thisPlot.getCoordinates(event.clientX, event.clientY);
-        var direction = 0;
+        let coord = thisPlot.getCoordinates(event.clientX, event.clientY);
+        let direction = 0;
         if (event.wheelDelta) {
             direction = -event.wheelDelta / 120.0;
         } else if (event.detail) {
@@ -1928,11 +1816,11 @@ Plot.prototype.initializeEvents = function() {
         }
     };
 
-    var onMouseOut = function(event) {
+    let onMouseOut = function(event) {
         event.stopPropagation();
         event.preventDefault();
         delete thisPlot.coordDown;
-        var select = thisPlot.getDrawing().getElementById('selectArea');
+        let select = thisPlot.getDrawing().getElementById('selectArea');
         // Remove select rectangle
         if (select) {
             select.parentNode.removeChild(select);
@@ -1951,14 +1839,14 @@ Plot.prototype.initializeEvents = function() {
     front.addEventListener('mouseout', onMouseOut, false);
 
     // Axis events (zomming);
-    var xAxis = svg.getElementById('xAxis');
+    let xAxis = svg.getElementById('xAxis');
     xAxis.addEventListener('mousewheel', onMouseWheel, {
         passive: false
     });
     xAxis.addEventListener('DOMMouseScroll', onMouseWheel, {
         passive: false
     });
-    var yAxis = svg.getElementById('yAxis');
+    let yAxis = svg.getElementById('yAxis');
     yAxis.addEventListener('mousewheel', onMouseWheel, {
         passive: false
     });
@@ -1980,30 +1868,30 @@ Plot.prototype.initializeEvents = function() {
 Plot.prototype.autoDisplay = function() {
 
     // Set UI parameters
-    var svg = this.getDrawing();
+    let svg = this.getDrawing();
 
     // drawing area
-    var drawingArea = svg.getElementById('drawingArea');
+    let drawingArea = svg.getElementById('drawingArea');
     drawingArea.setAttributeNS(null, 'x', 0);
     drawingArea.setAttributeNS(null, 'y', 0);
     drawingArea.setAttributeNS(null, 'width', svg.width.baseVal.value);
     drawingArea.setAttributeNS(null, 'height', svg.height.baseVal.value);
 
-    var dABBox = {
+    let dABBox = {
         'x': drawingArea.x.baseVal.value,
         'y': drawingArea.y.baseVal.value,
         'width': drawingArea.width.baseVal.value,
         'height': drawingArea.height.baseVal.value
     };
 
-    var axis = svg.getElementById('axis');
-    var xAxis = svg.getElementById('xAxis');
-    var yAxis = svg.getElementById('yAxis');
-    var title = svg.getElementById('title');
-    var xLabel = svg.getElementById('xLabel');
-    var yLabel = svg.getElementById('yLabel');
+    let axis = svg.getElementById('axis');
+    let xAxis = svg.getElementById('xAxis');
+    let yAxis = svg.getElementById('yAxis');
+    let title = svg.getElementById('title');
+    let xLabel = svg.getElementById('xLabel');
+    let yLabel = svg.getElementById('yLabel');
 
-    var titleBBox, xAxisBBox, yAxisBBox, xLabelBBox, yLabelBBox;
+    let titleBBox, xAxisBBox, yAxisBBox, xLabelBBox, yLabelBBox;
     try {
         titleBBox = svg.getElementById('title').getBBox();
         xAxisBBox = svg.getElementById('xAxis').getBBox();
@@ -2013,7 +1901,7 @@ Plot.prototype.autoDisplay = function() {
     } catch (e) {
         return this;
     }
-    var s;
+    let s;
 
     if (this.getOwnProperty('title-display')) {
         dABBox.y = titleBBox.height;
@@ -2029,7 +1917,7 @@ Plot.prototype.autoDisplay = function() {
         dABBox.y += 20;
     }
 
-    var xLabelSpace, yLabelSpace;
+    let xLabelSpace, yLabelSpace;
     if (this.getOwnProperty('yLabel-display')) {
         yLabelSpace = yLabelBBox.height + 10;
         dABBox.x += yLabelSpace;
@@ -2291,13 +2179,13 @@ Plot.prototype.getClosestPoint = function(x, y, scale) {
     if (scale === undefined) {
         scale = true;
     }
-    var dArea = this.getDrawing().getElementById('drawingArea');
-    var BBoxCurves = this.getCurrentAxis();
-    var BBox = {
+    let dArea = this.getDrawing().getElementById('drawingArea');
+    let BBoxCurves = this.getCurrentAxis();
+    let BBox = {
         width: dArea.width.baseVal.value,
         height: dArea.height.baseVal.value
     };
-    var rx = 1,
+    let rx = 1,
         ry = 1;
     if (!scale) {
         rx = BBoxCurves.width / BBox.width;
@@ -2312,8 +2200,8 @@ Plot.prototype.getClosestPoint = function(x, y, scale) {
  */
 Plot.prototype.setCursor = function(xc, yc) {
 
-    var svg = this.getDrawing();
-    var cursor = svg.getElementById('cursor');
+    let svg = this.getDrawing();
+    let cursor = svg.getElementById('cursor');
     if (xc !== undefined && yc !== undefined) {
         cursor.setAttributeNS(null, 'display', 'inline');
         cursor.setAttributeNS(null, 'points', xc + ',' + (-yc));
@@ -2328,7 +2216,7 @@ Plot.prototype.setCursor = function(xc, yc) {
  */
 Plot.prototype.translateAxis = function(dx, dy) {
 
-    var axis = this.getCurrentAxis();
+    let axis = this.getCurrentAxis();
     axis.x -= dx;
     axis.y += dy;
     this.setAxis(axis);
@@ -2341,12 +2229,12 @@ Plot.prototype.translateAxis = function(dx, dy) {
 Plot.prototype.zoomAxis = function(coord, fx, fy) {
     fx = fx || 1;
     fy = fy || fx;
-    var axis = this.getCurrentAxis();
-    var w = axis.width * fx;
-    var h = axis.height * fy;
-    var px = (coord.x - axis.x) / axis.width;
+    let axis = this.getCurrentAxis();
+    let w = axis.width * fx;
+    let h = axis.height * fy;
+    let px = (coord.x - axis.x) / axis.width;
     axis.x = coord.x - px * w;
-    var py = (coord.y + axis.y) / axis.height;
+    let py = (coord.y + axis.y) / axis.height;
     axis.y = -coord.y + py * h;
     axis.width = w;
     axis.height = h;
@@ -2359,12 +2247,12 @@ Plot.prototype.zoomAxis = function(coord, fx, fy) {
  */
 Plot.prototype.startSelectArea = function(coord) {
 
-    var selectProperties = this.getProperties('selectArea');
+    let selectProperties = this.getProperties('selectArea');
     selectProperties.x = coord.x;
     selectProperties.y = -coord.y;
     selectProperties.width = 0;
     selectProperties.height = 0;
-    var select = Tools.createSVGNode('rect', selectProperties);
+    let select = Tools.createSVGNode('rect', selectProperties);
     this.getDrawing().getElementById('curves').appendChild(select);
 };
 
@@ -2374,11 +2262,11 @@ Plot.prototype.startSelectArea = function(coord) {
  */
 Plot.prototype.updateSelectArea = function(coordStart, coordActual) {
 
-    var select = this.getDrawing().getElementById('selectArea');
-    var x = Math.min(coordStart.x, coordActual.x);
-    var y = Math.min(-coordStart.y, -coordActual.y);
-    var width = Math.max(coordStart.x, coordActual.x) - x;
-    var height = Math.max(-coordStart.y, -coordActual.y) - y;
+    let select = this.getDrawing().getElementById('selectArea');
+    let x = Math.min(coordStart.x, coordActual.x);
+    let y = Math.min(-coordStart.y, -coordActual.y);
+    let width = Math.max(coordStart.x, coordActual.x) - x;
+    let height = Math.max(-coordStart.y, -coordActual.y) - y;
     select.setAttributeNS(null, 'x', x);
     select.setAttributeNS(null, 'y', y);
     select.setAttributeNS(null, 'width', width);
@@ -2391,7 +2279,7 @@ Plot.prototype.updateSelectArea = function(coordStart, coordActual) {
  */
 Plot.prototype.endSelectArea = function(coordStart, coordEnd) {
 
-    var select = this.getDrawing().getElementById('selectArea');
+    let select = this.getDrawing().getElementById('selectArea');
     select.parentNode.removeChild(select);
     this.selectarea(coordStart.x, coordStart.y, coordEnd.x, coordEnd.y);
 };
@@ -2402,7 +2290,7 @@ Plot.prototype.endSelectArea = function(coordStart, coordEnd) {
  */
 Plot.prototype.cancelSelectArea = function() {
 
-    var select = this.getDrawing().getElementById('selectArea');
+    let select = this.getDrawing().getElementById('selectArea');
     if (select) {
         select.parentNode.removeChild(select);
     }
@@ -2435,13 +2323,13 @@ Plot.prototype.getCoordinates = function(x, y, screen, inverse) {
     if (screen === undefined) {
         screen = true;
     }
-    var svg = this.getDrawing();
-    var svgPoint = svg.createSVGPoint();
+    let svg = this.getDrawing();
+    let svgPoint = svg.createSVGPoint();
     svgPoint.x = x;
     svgPoint.y = y;
 
-    var curves = svg.getElementById('curves');
-    var matrix = screen ? curves.getScreenCTM() : curves.getCTM();
+    let curves = svg.getElementById('curves');
+    let matrix = screen ? curves.getScreenCTM() : curves.getCTM();
     matrix = inverse ? matrix.inverse() : matrix;
 
     svgPoint = svgPoint.matrixTransform(matrix);
@@ -2462,10 +2350,10 @@ Plot.prototype.getCoordinates = function(x, y, screen, inverse) {
  */
 Plot.loadCsv = function(csvString, transpose) {
 
-    var errMsg = 'Plot.loadCsv: ';
+    let errMsg = 'Plot.loadCsv: ';
     // Load data
-    var parsed = Tools.parseCsv(csvString, /\s*\n\s*/, /\s+/, false);
-    var arrays = Tools.Array.mapRec(parsed, parseFloat);
+    let parsed = Tools.parseCsv(csvString, /\s*\n\s*/, /\s+/, false);
+    let arrays = Tools.Array.mapRec(parsed, parseFloat);
     if (!Tools.Array.isRectangle(arrays)) {
         throw new Error(errMsg + 'invalid csv string');
     }
@@ -2496,8 +2384,8 @@ Plot.loadCsv = function(csvString, transpose) {
  */
 Plot.prototype.displayCsv = function(csvString, transpose, auto, properties) {
 
-    var errMsg = this.constructor.name + 'displayCsv: ';
-    var arrays = Plot.loadCsv(csvString, transpose);
+    let errMsg = this.constructor.name + 'displayCsv: ';
+    let arrays = Plot.loadCsv(csvString, transpose);
 
     // Auto colors
     if (auto === undefined) {
@@ -2505,7 +2393,8 @@ Plot.prototype.displayCsv = function(csvString, transpose, auto, properties) {
     } else if (typeof auto !== 'boolean') {
         throw new Error(errMsg + "invalid 'auto' parameter");
     }
-    var colors = ["red", "green", "blue",
+    let colors = [
+        "red", "green", "blue",
         "fuchsia", "lime", "aqua",
         "purple", "olive", "teal",
         "yellow", "navy", "maroon",
@@ -2513,20 +2402,20 @@ Plot.prototype.displayCsv = function(csvString, transpose, auto, properties) {
     ];
 
     // If there is more than one series then the first one is used as x coordinates
-    var i, k, x = [];
+    let x = [];
     if (arrays.length > 1) {
         x = arrays.shift();
     } else {
-        for (k = 0; k < arrays[0].length; k++) {
+        for (let k = 0; k < arrays[0].length; k++) {
             x.push(k + 1);
         }
     }
 
     // Plot everything
-    for (k = 0; k < arrays.length; k++) {
-        var nPlot = this.getOwnProperty('autoId-curves');
+    for (let k = 0; k < arrays.length; k++) {
+        let nPlot = this.getOwnProperty('autoId-curves');
         if (auto === true) {
-            var color = colors[nPlot % colors.length];
+            let color = colors[nPlot % colors.length];
             if (properties) {
                 if (properties.stroke !== 'none') {
                     properties.stroke = color;
@@ -2552,11 +2441,10 @@ Plot.prototype.displayCsv = function(csvString, transpose, auto, properties) {
  */
 Plot.prototype.getCurvesIds = function() {
 
-    var ids = [];
-    var curves = this.getDrawing().getElementById('curves');
+    let ids = [];
+    let curves = this.getDrawing().getElementById('curves');
     if (curves.hasChildNodes()) {
-        var i;
-        for (i = 0; i < curves.childNodes.length; i++) {
+        for (let i = 0; i < curves.childNodes.length; i++) {
             ids.push(curves.childNodes[i].id);
         }
     }
@@ -2579,11 +2467,10 @@ Plot.prototype.getCurvesIds = function() {
  */
 Plot.prototype.setCurveProperty = function(id, property, value) {
 
-    var curves = this.getDrawing().getElementById('curves');
+    let curves = this.getDrawing().getElementById('curves');
     if (curves.hasChildNodes()) {
-        var i;
-        var curvesChilds = curves.childNodes;
-        for (i = 0; i < curvesChilds.length; i++) {
+        let curvesChilds = curves.childNodes;
+        for (let i = 0; i < curvesChilds.length; i++) {
             if (curvesChilds[i].id === id) {
                 curvesChilds[i].setAttributeNS(null, property, value);
                 this.setLegend();
@@ -2611,16 +2498,15 @@ Plot.prototype.setCurveProperty = function(id, property, value) {
  */
 Plot.prototype.setCurveMarkerProperty = function(id, property, value) {
 
-    var svg = this.getDrawing();
-    var curves = svg.getElementById('curves');
+    let svg = this.getDrawing();
+    let curves = svg.getElementById('curves');
     if (curves.hasChildNodes()) {
-        var i;
-        var curvesChilds = curves.childNodes;
-        for (i = 0; i < curvesChilds.length; i++) {
+        let curvesChilds = curves.childNodes;
+        for (let i = 0; i < curvesChilds.length; i++) {
             if (curvesChilds[i].id === id) {
-                var curve = curvesChilds[i];
-                var markerId = curve.getAttributeNS(null, 'marker-id');
-                var marker = svg.getElementById(markerId);
+                let curve = curvesChilds[i];
+                let markerId = curve.getAttributeNS(null, 'marker-id');
+                let marker = svg.getElementById(markerId);
                 if (property === 'shape') {
                     this.setMarkerShape(marker, value);
                 }
@@ -2640,16 +2526,12 @@ Plot.prototype.setCurveMarkerProperty = function(id, property, value) {
  * @return {Object}
  *  The window created.
  */
-Plot.prototype.toWindow = function(h, w) {
-    var wo = this.getWidth(),
-        ho = this.getHeight();
-    h = h || ho;
-    w = w || wo;
-    var BBox; // = this.getCurrentAxis();
+Plot.prototype.toWindow = function(h = this.getHeight(), w = this.getWidth()) {
+    let BBox; // = this.getCurrentAxis();
     this.setWidth(w).setHeight(h).setAxis(BBox);
-    var win = window.open("", "", "width=" + (w + 30) + ", height=" + (h + 30));
+    let win = window.open("", "", "width=" + (w + 30) + ", height=" + (h + 30));
     win.document.body.appendChild(this.setAxis(BBox).getDrawing().cloneNode(true));
-    this.setWidth(wo).setHeight(ho).setAxis(BBox);
+    this.setWidth(this.getWidth()).setHeight(this.getHeight()).setAxis(BBox);
     return win;
 };
 
@@ -2660,7 +2542,7 @@ Plot.prototype.toWindow = function(h, w) {
  * @chainable
  */
 Plot.prototype.print = function(h, w) {
-    var win = this.toWindow(h, w);
+    let win = this.toWindow(h, w);
     win.print();
     win.close();
     return this;
@@ -2698,8 +2580,8 @@ Plot.prototype.mousemove = function(coord, event) {
     if (this.coordDown === undefined) {
         return;
     }
-    var oldCoord = this.coordDown;
-    var newCoord = coord;
+    let oldCoord = this.coordDown;
+    let newCoord = coord;
     if (event.shiftKey) {
         this.updateSelectArea(oldCoord, newCoord);
     } else {
@@ -2718,8 +2600,8 @@ Plot.prototype.mousemove = function(coord, event) {
  * @param {Event} event Original event fired.
  */
 Plot.prototype.mouseup = function(coord, event) {
-    var oldCoord = this.coordDown;
-    var newCoord = coord;
+    let oldCoord = this.coordDown;
+    let newCoord = coord;
     if (event.shiftKey) {
         this.endSelectArea(oldCoord, newCoord);
     } else {
@@ -2736,7 +2618,7 @@ Plot.prototype.mouseup = function(coord, event) {
  * @param {Event} event Original event fired.
  */
 Plot.prototype.mousewheel = function(direction, coord, event) {
-    var f = 1 + direction * 0.1;
+    let f = 1 + direction * 0.1;
     this.zoomAxis(coord, f);
 };
 
@@ -2759,7 +2641,7 @@ Plot.prototype.mousewheel = function(direction, coord, event) {
  *  };
  */
 Plot.prototype.click = function(coord, event) {
-    var c = this.getClosestPoint(coord.x, coord.y, false);
+    let c = this.getClosestPoint(coord.x, coord.y, false);
     if (c) {
         this.setCursor(c.x, c.y);
     }
