@@ -6,7 +6,7 @@
  * @singleton
  * @private
  */
-var Tools = {};
+let Tools = {};
 
 /** Creates a svg node.
  * @param {String} type
@@ -15,9 +15,8 @@ var Tools = {};
  */
 Tools.createSVGNode = function(type, args) {
     type = type.toLowerCase();
-    var element = document.createElementNS('http://www.w3.org/2000/svg', type);
-    var i;
-    for (i in args) {
+    let element = document.createElementNS('http://www.w3.org/2000/svg', type);
+    for (let i in args) {
         if (args.hasOwnProperty(i)) {
             element.setAttributeNS(null, i, args[i]);
         }
@@ -31,9 +30,8 @@ Tools.createSVGNode = function(type, args) {
  * @return {Object}
  */
 Tools.createSVGTextNode = function(text, args) {
-    var element = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-    var i;
-    for (i in args) {
+    let element = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    for (let i in args) {
         if (args.hasOwnProperty(i)) {
             element.setAttributeNS(null, i, args[i]);
         }
@@ -51,8 +49,7 @@ Tools.createSVGTextNode = function(text, args) {
  *  add some details.
  */
 Tools.getPosition = function(e, event) {
-    var left = 0;
-    var top = 0;
+    let left = 0, top = 0;
 
     // Tant que l'on a un élément parent
     while (e.offsetParent !== undefined && e.offsetParent !== null) {
@@ -83,7 +80,7 @@ Tools.isArrayLike = function(obj) {
  *  Creates a Vector.
  */
 Tools.Vector = function(arg1, arg2, arg3, arg4) {
-    var n, b, s, e, i, a, x;
+    let n, b, s, e, i, a, x;
     if (Tools.isArrayLike(arg1)) {
         n = arg1.length;
         this.data = this.zeros(n, arg4);
@@ -139,7 +136,7 @@ Tools.Vector = function(arg1, arg2, arg3, arg4) {
  * @param {Object} [constructor=Float64Array]
  */
 Tools.Vector.prototype.zeros = function(n, Type) {
-    var out;
+    let out;
     if (!Type) {
         out = new Float64Array(n);
     } else {
@@ -154,9 +151,9 @@ Tools.Vector.prototype.zeros = function(n, Type) {
  * @param {Number} number
  */
 Tools.Vector.linearSpace = function(b, e, n) {
-    var n1 = Math.floor(n) - 1;
-    var c = (e - b) * (n - 2);
-    var out = new Tools.Vector(b, (e - b) / n1, e);
+    let n1 = Math.floor(n) - 1;
+    let c = (e - b) * (n - 2);
+    let out = new Tools.Vector(b, (e - b) / n1, e);
     out.data[n - 1] = e;
     return out;
 };
@@ -164,13 +161,9 @@ Tools.Vector.linearSpace = function(b, e, n) {
 /** Derive a vector.
  * @param {Number} order
  */
-Tools.Vector.prototype.derive = function(o) {
-    o = o || 1;
-    var d, i, x, n;
-    d = this.data;
-    i = this.index;
-    n = i.length;
-    for (x = 1; x < n; x++) {
+Tools.Vector.prototype.derive = function(o = 1) {
+    let d = this.data, i = this.index, x, n;
+    for (x = 1, n = i.length; x < n; x++) {
         d[i[x - 1]] = d[i[x]] - d[i[x - 1]];
     }
     this.data = this.data.subarray(0, n - 1);
@@ -186,13 +179,9 @@ Tools.Vector.prototype.derive = function(o) {
  * [value, indice]
  */
 Tools.Vector.prototype.max = function() {
-    var d, n, x, i, nx;
-    d = this.data;
-    i = this.index;
-    nx = i.length;
-    var M = -Infinity;
-    var Mind = NaN;
-    for (x = 0; x < nx; x++) {
+    let d = this.data, i = this.index;
+    let M = -Infinity, Mind = NaN;
+    for (let x = 0, nx = i.length; x < nx; x++) {
         if (d[i[x]] > M) {
             M = d[i[x]];
             Mind = i[x];
@@ -206,13 +195,9 @@ Tools.Vector.prototype.max = function() {
  * [value, indice]
  */
 Tools.Vector.prototype.min = function() {
-    var d, n, x, i, nx;
-    d = this.data;
-    i = this.index;
-    nx = i.length;
-    var M = +Infinity;
-    var Mind = NaN;
-    for (x = 0; x < nx; x++) {
+    let d = this.data, i = this.index;
+    let M = +Infinity, Mind = NaN;
+    for (let x = 0, nx = i.length; x < nx; x++) {
         if (d[i[x]] < M) {
             M = d[i[x]];
             Mind = i[x];
@@ -343,27 +328,13 @@ Tools.makeDraggable = function(element, callback, type) {
     element.addEventListener('drop', drop, false);
 };
 
-Tools.parseCsv = function(csv, vDelim, hDelim, transpose) {
-    transpose = transpose || false;
-    /*
-    var tabRow = csv.split(vDelim);
-    var output = [];
-    var i;
-    for (i = 0; i < tabRow.length; i++) {
-    if (/\d/.test(tabRow[i])) {
-    output.push(tabRow[i].split(hDelim));
-    }
-    }
-    */
-    vDelim = vDelim || "\n";
-    var csv = csv.split(vDelim);
+Tools.parseCsv = function(csv, vDelim = "\n", hDelim, transpose = false) {
+    csv = csv.split(vDelim);
     if (csv[csv.length - 1] === "") {
         csv.pop();
     }
-    var i, ei;
-    var output = [];
-
-    for (i = 0, ei = csv.length; i < ei; i++) {
+    let output = [];
+    for (let i = 0, ei = csv.length; i < ei; i++) {
         output.push(csv[i].match(/[\-+]?[0-9]*\.?[0-9]+([eE][\-+]?[0-9]+)?/g));
     }
     return transpose ? Tools.Array.transpose(output) : output;
@@ -371,9 +342,7 @@ Tools.parseCsv = function(csv, vDelim, hDelim, transpose) {
 
 Tools.Array = Tools.Array || {};
 Tools.Array.opposite = function(a) {
-
-    var i;
-    for (i = 0; i < a.length; i++) {
+    for (let i = 0; i < a.length; i++) {
         if (a[i] instanceof Array) {
             Tools.Array.opposite(a[i]);
         } else {
@@ -392,9 +361,9 @@ Tools.Array.opposite = function(a) {
  */
 Tools.Array.mapRec = function(a, f) {
 
-    var i, N = a.length;
-    var aOut = new a.constructor(N);
-    for (i = 0; i < N; i++) {
+    let N = a.length;
+    let aOut = new a.constructor(N);
+    for (let i = 0; i < N; i++) {
         if (a[i].length !== undefined && typeof a[i] !== 'string') {
             aOut[i] = Tools.Array.mapRec(a[i], f);
         } else {
@@ -412,13 +381,12 @@ Tools.Array.mapRec = function(a, f) {
  *  True iff all the sub-arrays have the same length.
  */
 Tools.Array.isRectangle = function(a) {
-
     if (!a || !a.length || a[0].length === undefined) {
         return false;
     }
-    var i, N = a.length;
-    var P = a[0].length;
-    for (i = 1; i < N; i++) {
+    let N = a.length;
+    let P = a[0].length;
+    for (let i = 1; i < N; i++) {
         if (a[i].length !== P) {
             return false;
         }
@@ -433,21 +401,20 @@ Tools.Array.isRectangle = function(a) {
  *  Transposed array.
  */
 Tools.Array.transpose = function(a) {
-    var errMsg = 'Tools.Array.transpose: ';
+    let errMsg = 'Tools.Array.transpose: ';
     if (!Tools.Array.isRectangle(a)) {
         throw new Error(errMsg + 'cannot transpose a non-rectangular array');
     }
-    var i, N = a.length;
-    var j, P = a[0].length;
-    var aOut = new a.constructor(P);
-    for (j = 0; j < P; j++) {
+    let N = a.length;
+    let P = a[0].length;
+    let aOut = new a.constructor(P);
+    for (let j = 0; j < P; j++) {
         aOut[j] = new a[0].constructor(N);
-        for (i = 0; i < N; i++) {
+        for (let i = 0; i < N; i++) {
             aOut[j][i] = a[i][j];
         }
     }
     return aOut;
 };
-
 
 export default Tools;
