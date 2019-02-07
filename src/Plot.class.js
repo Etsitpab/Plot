@@ -2185,8 +2185,7 @@ Plot.prototype.getClosestPoint = function(x, y, scale) {
         width: dArea.width.baseVal.value,
         height: dArea.height.baseVal.value
     };
-    let rx = 1,
-        ry = 1;
+    let rx = 1, ry = 1;
     if (!scale) {
         rx = BBoxCurves.width / BBox.width;
         ry = BBoxCurves.height / BBox.height;
