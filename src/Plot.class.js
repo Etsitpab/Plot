@@ -1,4 +1,4 @@
-/*global console, Tools, HTMLElement, document, Vector, Image, Tree2d, HTMLImageElement*/
+/*global Vector*/
 
 // Bugs:    - Histogrammes ne fonctionnent pas avec des valeurs négatives
 //          - legend quand stroke est donné par default
@@ -20,10 +20,7 @@
  * @author <a href="mailto:gtartavel@gmail.com">Guillaume Tartavel</a>
  * @author <a href="mailto:baptiste.mazin@gmail.com">Baptiste Mazin</a>
  */
-import Matrix, {
-    MatrixView,
-    Check
-} from "../../JSNA/src/Matrix.class.js";
+import Matrix from "@etsitpab/matrix";
 
 import Tools from "./Plot.tools.js";
 import Tree2d from "./Tree2d.class.js";
@@ -463,10 +460,10 @@ Plot.prototype.addPath = function(x, y, args) {
     y = y instanceof Matrix ? y.getData() : y;
 
     if (x.includes(NaN) || y.includes(NaN)) {
-        throw new Error("Plot.addPath: Data must not contain NaN values.")
+        throw new Error("Plot.addPath: Data must not contain NaN values.");
     }
     if (x.includes(Infinity) || y.includes(Infinity) || x.includes(-Infinity) || y.includes(-Infinity)) {
-        throw new Error("Plot.addPath: Data must not contain Infinity values.")
+        throw new Error("Plot.addPath: Data must not contain Infinity values.");
     }
 
     // Add (or replace) user arguments
@@ -629,31 +626,28 @@ Plot.prototype.addHistogram = function(x, y, args) {
  *  // Insert plot into web page
  *  document.body.appendChild (myPlot.getDrawing ());
  */
-Plot.prototype.addImage = function(src, x = 0, y = 0, args) {
-    let thisPlot = this;
-    let onload = () => {
-        let defaultArgs = Object.assign(thisPlot.getProperties('image'), args);
-
+Plot.prototype.addImage = function(src, x = 0, y = 0, args = {}) {
+    const plot = this;
+    const onload = function () {
+        const defaultArgs = Object.assign(plot.getProperties('image'), args);
         defaultArgs.width = this.width;
         defaultArgs.height = this.height;
         defaultArgs.x = x;
         defaultArgs.y = -y;
 
-        let image = Tools.createSVGNode('image', defaultArgs);
+        const image = Tools.createSVGNode('image', defaultArgs);
         image.setAttributeNS('http://www.w3.org/1999/xlink',
             'xlink:href', this.src);
 
         image.BBox = [x, -this.height + y, x + this.width, y];
 
         // Add the to the path list
-        thisPlot.add(image, x, y);
+        plot.add(image, x, y);
     };
 
 
     if (typeof src === 'string') {
-        let im = new Image();
-        im.src = src;
-        im.onload = onload;
+        Object.assign(new Image(), {src, onload});
     } else if (src instanceof HTMLImageElement) {
         onload.bind(src)();
     }
@@ -1415,7 +1409,7 @@ Plot.prototype.setLegend = function () {
                 textNode.setAttributeNS(null, 'x', xPos + sBox.width + 5);
 
                 // Sample
-                let sample
+                let sample;
                 switch (curvesChilds[i].tagName) {
                     case 'image':
                         let sampleProperties = {

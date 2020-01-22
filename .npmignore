@@ -1,0 +1,6 @@
+test/
+coverage/
+docs/
+node_modules/
+.*
+octave-workspace

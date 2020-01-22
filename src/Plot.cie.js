@@ -1,4 +1,4 @@
-import CIE from "../../JSNA/modules/jsCIE/src/CIE.object.js";
+import CIE from "@etsitpab/cie";
 
 let cieExtension = function (Plot) {
 

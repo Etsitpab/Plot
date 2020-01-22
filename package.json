@@ -1,0 +1,31 @@
+{
+    "name": "@etsitpab/plot",
+    "version": "1.0.0",
+    "description": "Nice interactive SVG  plot for browser.",
+    "main": "index.js",
+    "module": "src/Plot.class.js",
+    "repository": "git@bitbucket.org:baptiste_mazin/plot.git",
+    "author": "Baptiste Mazin",
+    "license": "ISC",
+    "keywords": [],
+    "scripts": {
+        "test": "jest --coverage"
+    },
+    "devDependencies": {
+        "@babel/core": "^7.7.7",
+        "@babel/preset-env": "^7.7.7",
+        "babel-jest": "^24.9.0",
+        "jest": "^24.9.0"
+    },
+    "dependencies": {
+        "@etsitpab/cie": "file:../cie",
+        "@etsitpab/logger": "file:../logger",
+        "@etsitpab/matrix": "file:../matrix",
+        "esm": "^3.2.25"
+    },
+    "jest": {
+        "transform": {
+            "\\.js$": "babel-jest"
+        }
+    }
+}

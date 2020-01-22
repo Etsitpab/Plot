@@ -6,7 +6,7 @@
  * @singleton
  * @private
  */
-let Tools = {};
+const Tools = {};
 
 /** Creates a svg node.
  * @param {String} type

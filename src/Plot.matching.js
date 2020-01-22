@@ -1,10 +1,10 @@
 
-let matchingExtension = function (Plot) {
+export default function (Plot) {
     Plot.prototype.viewPatch = function(S, n, name, part) {
-        var p = this;
+        const p = this;
         p.clear();
-        var k = S.keypoints[n];
-        var patch = k.descriptorsData[name].patch;
+        const k = S.keypoints[n];
+        let patch = k.descriptorsData[name].patch;
         if (part === "norm") {
             patch = patch[part];
             patch = patch.rdivide(patch.max2());
@@ -28,90 +28,57 @@ let matchingExtension = function (Plot) {
     };
 
     Plot.prototype.showKeypoints = function(S) {
-        var p = this;
-        p.clear();
+        this.clear();
+        const scatterProperties = {
+            "stroke": "none",
+            "marker": {
+                "shape": "circle",
+                "fill": "red",
+                "size": 2
+            }
+        };
         S.image.toImage(function() {
-            p.addImage(this, 0, 0);
-            var scatterProperties = {
-                "stroke": "none",
-                "marker": {
-                    "shape": "circle",
-                    "fill": "red",
-                    "size": 2
-                }
-            };
-
-            var x = [],
-            y = [];
-            var i, ie;
-            for (i = 0, ie = S.keypoints.length; i < ie; i++) {
+            this.addImage(this, 0, 0);
+            const x = [], y = [], ie = S.keypoints.length;
+            let i;
+            for (i = 0; i < ie; i++) {
                 x[i] = S.keypoints[i].x;
                 y[i] = -S.keypoints[i].y;
             }
-            p.addPath(x, y, scatterProperties);
-            p.setTitle(S.keypoints.length + " Keypoints");
+            this.addPath(x, y, scatterProperties);
+            this.setTitle(S.keypoints.length + " Keypoints");
         });
         return this;
     };
 
-    Plot.prototype.showMatches = function(im1, im2, matches, align) {
-        align = align || 'v';
-        var p = this,
-        offset;
-        p.clear();
+    Plot.prototype.showMatches = async function(im1, im2, matches, align = "v") {
+        this.clear();
+        const [width, height] = im1.size();
+        im1 = await im1.toImage();
+        im2 = await im2.toImage();
+        this.addImage(im1, 0, 0);
 
-        if (align === 'v') {
-            offset = im1.getSize(0);
-            im1.toImage(function() {
-                p.addImage(this, 0, 0);
-                im2.toImage(function() {
-                    p.addImage(this, 0, -offset);
-                    var m = matches;
-                    for (var i = 0; i < m.length; i++) {
-                        var k1 = m[i].k1,
-                        k2 = m[i].k2;
-                        if (m[i].isValid) {
-                            p.addPath([k1.x, k2.x], [-k1.y, -offset - k2.y], {
-                                id: i,
-                                stroke: "lime"
-                            });
-                        } else {
-                            p.addPath([k1.x, k2.x], [-k1.y, -offset - k2.y], {
-                                id: i,
-                                stroke: "red"
-                            });
-                        }
-                    }
-                    // p.setTitle(m.length + " Matches");
+        // this.setTitle(m.length + " Matches");
+        if (align.toLowerCase() === 'v') {
+            this.addImage(im2, 0, -height);
+            let i;
+            for (i = 0; i < matches.length; i++) {
+                const {k1, k2, isValid} = matches[i];
+                this.addPath([k1.y, k2.y], [-k1.x, -height - k2.x], {
+                    id: i,
+                    stroke: isValid ? "lime" : "red"
                 });
-            });
+            }
         } else {
-            offset = im1.getSize(1);
-            im1.toImage(function() {
-                p.addImage(this, 0, 0);
-                im2.toImage(function() {
-                    p.addImage(this, offset, 0);
-                    var m = matches;
-                    for (var i = 0; i < m.length; i++) {
-                        var k1 = m[i].k1,
-                        k2 = m[i].k2;
-                        if (m[i].isValid) {
-                            p.addPath([k1.x, k2.x + offset], [-k1.y, -k2.y], {
-                                id: i,
-                                stroke: "lime"
-                            });
-                        } else {
-                            p.addPath([k1.x, k2.x + offset], [-k1.y, -k2.y], {
-                                id: i,
-                                stroke: "red"
-                            });
-                        }
-                    }
-                    // p.setTitle(m.length + " Matches");
+            this.addImage(im2, width, 0);
+            let i;
+            for (i = 0; i < matches.length; i++) {
+                const {k1, k2, isValid} = matches[i];
+                this.addPath([k1.y, k2.y + width], [-k1.x, -k2.x], {
+                    id: i,
+                    stroke: isValid ? "lime" : "red"
                 });
-            });
+            }
         }
     };
 }
-
-export default matchingExtension;
