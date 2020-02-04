@@ -112,11 +112,10 @@ let cieExtension = function (Plot) {
         }
     };
 
-    Plot.prototype.addChromaticitiesFromRgb = function(r, g, b, args, diagram, wp) {
-        diagram = diagram || 'xyY';
+    Plot.prototype.addChromaticitiesFromRgb = function(r, g, b, args, diagram = "xyY", wp = undefined) {
 
         var defaultArgs = this.getProperties('chromaticityPath');
-        var i, end;
+        var i;
         for (i in args) {
             if (args.hasOwnProperty(i)) {
                 defaultArgs[i] = args[i];

@@ -1,31 +1,26 @@
 {
     "name": "@etsitpab/plot",
-    "version": "1.0.0",
-    "description": "Nice interactive SVG  plot for browser.",
-    "main": "index.js",
-    "module": "src/Plot.class.js",
-    "repository": "git@bitbucket.org:baptiste_mazin/plot.git",
+    "description": "Generate SVG Plot for browser.",
     "author": "Baptiste Mazin",
     "license": "ISC",
+    "repository": "git@bitbucket.org:baptiste_mazin/plot.git",
+    "version": "1.0.1",
     "keywords": [],
+    "type": "module",
+    "main": "./src/Plot.class.js",
+    "exports": "./src/Plot.class.js",
     "scripts": {
-        "test": "jest --coverage"
-    },
-    "devDependencies": {
-        "@babel/core": "^7.7.7",
-        "@babel/preset-env": "^7.7.7",
-        "babel-jest": "^24.9.0",
-        "jest": "^24.9.0"
+        "test": "jest --coverage",
+        "clean": "rm -rf package-lock.json node_modules",
+        "console": "node --input-type=module --eval \"import Plot from '@etsitpab/plot'; console.log(Plot);\""
     },
     "dependencies": {
-        "@etsitpab/cie": "file:../cie",
         "@etsitpab/logger": "file:../logger",
         "@etsitpab/matrix": "file:../matrix",
-        "esm": "^3.2.25"
+        "@etsitpab/cie": "file:../cie"
     },
-    "jest": {
-        "transform": {
-            "\\.js$": "babel-jest"
-        }
+    "devDependencies": {
+        "@babel/preset-env": "^7.8.4",
+        "jest": "^25.1.0"
     }
 }
