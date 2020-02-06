@@ -4,7 +4,7 @@
     "author": "Baptiste Mazin",
     "license": "ISC",
     "repository": "git@bitbucket.org:baptiste_mazin/plot.git",
-    "version": "1.0.1",
+    "version": "1.0.0",
     "keywords": [],
     "type": "module",
     "main": "./src/Plot.class.js",
@@ -15,9 +15,9 @@
         "console": "node --input-type=module --eval \"import Plot from '@etsitpab/plot'; console.log(Plot);\""
     },
     "dependencies": {
-        "@etsitpab/logger": "file:../logger",
-        "@etsitpab/matrix": "file:../matrix",
-        "@etsitpab/cie": "file:../cie"
+        "@etsitpab/cie": "^1.0.0",
+        "@etsitpab/logger": "^1.0.4",
+        "@etsitpab/matrix": "^1.0.3"
     },
     "devDependencies": {
         "@babel/preset-env": "^7.8.4",
