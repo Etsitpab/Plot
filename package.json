@@ -4,7 +4,7 @@
     "author": "Baptiste Mazin",
     "license": "ISC",
     "repository": "git@bitbucket.org:baptiste_mazin/plot.git",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "keywords": [],
     "type": "module",
     "main": "./src/Plot.class.js",
