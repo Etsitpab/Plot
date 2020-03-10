@@ -1,4 +1,5 @@
-import CIE, {illuminants} from "@etsitpab/cie";
+import CIE, {illuminants}   from "@etsitpab/cie";
+import ColorConversions     from "@etsitpab/colorconversions";
 
 export default function (Plot) {
 
@@ -102,25 +103,18 @@ export default function (Plot) {
     };
 
     Plot.prototype.addChromaticitiesFromRgb = function(r, g, b, args, diagram = "xyY", wp = undefined) {
-
-        var defaultArgs = this.getProperties('chromaticityPath');
-        var i;
-        for (i in args) {
-            if (args.hasOwnProperty(i)) {
-                defaultArgs[i] = args[i];
-            }
-        }
-        var N = r.length;
-        var data = new Float32Array(N * 3),
-        x = data.subarray(0, N),
-        y = data.subarray(N, N * 2),
-        z = data.subarray(N * 2);
+        const defaultArgs = Object.assign(this.getProperties('chromaticityPath'), args);
+        const N = r.length;
+        const data = new Float32Array(N * 3),
+            x = data.subarray(0, N),
+            y = data.subarray(N, N * 2),
+            z = data.subarray(N * 2);
 
         x.set(r);
         y.set(g);
         z.set(b);
 
-        Matrix.Colorspaces['RGB to ' + diagram](data, N, N, 1, wp);
+        ColorConversions['RGB to ' + diagram](data, N, N, 1, wp);
         this.addPath(x, y, defaultArgs);
         return this;
     };

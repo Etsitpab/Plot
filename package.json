@@ -16,6 +16,7 @@
     },
     "dependencies": {
         "@etsitpab/cie": "^1.1.0",
+        "@etsitpab/colorconversions": "^1.0.1",
         "@etsitpab/logger": "^1.0.4",
         "@etsitpab/matrix": "^1.0.3"
     },
