@@ -1,22 +1,15 @@
-import CIE from "@etsitpab/cie";
+import CIE, {illuminants} from "@etsitpab/cie";
 
-let cieExtension = function (Plot) {
+export default function (Plot) {
 
     Plot.prototype.addChromaticityDiagram = function(diagram, args) {
-        var param = {
+        const param = Object.assign({
             "Planckian locus": true,
             "Daylight locus": true,
             "Spectrum locus": true,
             "Standards illuminants": true,
             "Gamut": true
-        };
-
-        var i;
-        for (i in args) {
-            if (args.hasOwnProperty(i)) {
-                param[i] = args[i];
-            }
-        }
+        }, args);
 
         if (diagram === 'rgY') {
             this.setTitle('CIE rg Diagram', 'r chromaticity', 'g chromaticity');
@@ -32,23 +25,23 @@ let cieExtension = function (Plot) {
         }
 
         // Plot properties
-        var pLProperties = {
+        const pLProperties = {
             'id': 'Planckian locus',
             'stroke': 'black',
             'stroke-width': 1
         };
-        var sLProperties = {
+        const sLProperties = {
             'id': 'Spectrum locus',
             'stroke': 'lightseagreen',
             'stroke-width': 2,
             'stroke-dasharray': "5 2"
         };
-        var pGProperties = {
+        const pGProperties = {
             'id': 'Gamut',
             'stroke': 'red',
             'stroke-width': 1
         };
-        var sIProperties = {
+        const sIProperties = {
             'id': 'Standards illuminants',
             'stroke': 'none',
             'fill': 'none',
@@ -61,40 +54,36 @@ let cieExtension = function (Plot) {
         };
 
         // Get primaries Data
-        var prim = CIE.getPrimaries('current', diagram);
-
-        // Get standards illuminants data
-        var stdIll = CIE.getIlluminantList();
-        var xStdIll = [],
-        yStdIll = [];
-
-        var i;
-        for (i = stdIll.length; i--; i) {
-            var ill = CIE.getIlluminant(stdIll[i], diagram);
-            xStdIll.push(ill[0]);
-            yStdIll.push(ill[1]);
-        }
+        const prim = CIE.getPrimaries('current', diagram);
 
         // Plot spectrum locus
         if (param["Spectrum locus"] === true) {
-            var sL = CIE.getSpectrumLocus(diagram);
+            const sL = CIE.getSpectrumLocus(diagram);
             this.addPath(sL[0], sL[1], sLProperties);
         }
         // Plot planckian locus
         if (param["Planckian locus"] === true) {
-            var pL = CIE.getPlanckianLocus(diagram);
+            const pL = CIE.getPlanckianLocus(diagram);
             this.addPath(pL[0], pL[1], pLProperties);
         }
 
         // Plot primaries gamut
         if (param["Gamut"] === true) {
-            var xPrim = [prim[0], prim[3], prim[6], prim[0]];
-            var yPrim = [prim[1], prim[4], prim[7], prim[1]];
+            const xPrim = [prim[0], prim[3], prim[6], prim[0]];
+            const yPrim = [prim[1], prim[4], prim[7], prim[1]];
             this.addPath(xPrim, yPrim, pGProperties);
         }
 
         // Plot standards illuminants
         if (param["Standards illuminants"] === true) {
+            // Get standards illuminants data
+            const xStdIll = [], yStdIll = [];
+            let illName;
+            for (illName of Object.keys(illuminants)) {
+                const ill = CIE.getIlluminant(illName, diagram);
+                xStdIll.push(ill[0]);
+                yStdIll.push(ill[1]);
+            }
             this.addPath(xStdIll, yStdIll, sIProperties);
         }
 
@@ -137,5 +126,3 @@ let cieExtension = function (Plot) {
     };
 
 };
-
-export default cieExtension;
